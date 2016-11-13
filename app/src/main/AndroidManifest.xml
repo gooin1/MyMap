@@ -25,13 +25,24 @@
 
 
     <application
-
-
+        android:name=".LocationApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <service
+            android:name="com.baidu.location.f"
+            android:enabled="true"
+            android:process=":remote" >
+            <intent-filter>
+                <action android:name="com.baidu.location.service_v2.2" >
+                </action>
+            </intent-filter>
+        </service>
+
+
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
@@ -43,15 +54,10 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name="com.baidu.location.f"
-            android:enabled="true"
-            android:process=":remote">
-        </service>
-        <meta-data
-            android:name="com.baidu.lbsapi.API_KEY"
-            android:value="wj6OckOXXG4fVxUDdVhKyYLgOk93VTDn" />       //key:开发者申请的Key
-            />
+
+    <meta-data
+        android:name="com.baidu.lbsapi.API_KEY"
+        android:value="9kP308UV5gXUuZuL4zCgzhXbvZk2XjNq" />
 
          </application>
 
