@@ -19,9 +19,12 @@ import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.model.LatLng;
 
@@ -34,8 +37,12 @@ public class MainActivity extends AppCompatActivity
     private BaiduMap mBaiduMap;
 
     // 权限请求.
-    private static final int ACCESS_COARSE_LOCATION  = 1;
+    private static final int ACCESS_COARSE_LOCATION = 1;
 
+    // 自定义定位图标
+    private BitmapDescriptor mIconLocation;
+    private static final int accuracyCircleFillColor = 0xAAFFFF88;
+    private static final int accuracyCircleStrokeColor = 0xAA00FF00;
 
     //定位相关参数
     private LocationClient mLocationClient = null;
@@ -86,6 +93,8 @@ public class MainActivity extends AppCompatActivity
                 (UPDATE_TIME, MINI_DISTANCE, LOC_SENSITIVITY_HIGHT); // 最短定位时间间隔, 最短定位距离间隔,定位变化敏感度
 
         mLocationClient.setLocOption(option);
+        // 初始化图标
+        mIconLocation = BitmapDescriptorFactory.fromResource(R.mipmap.ic_huaji);
 
     }
 
@@ -95,9 +104,13 @@ public class MainActivity extends AppCompatActivity
         // 实例化地图
         mMapView = (MapView) findViewById(R.id.map_view);
         mMapView.showZoomControls(false);
+        // 开启定位
         mBaiduMap = mMapView.getMap();
-        MapStatusUpdate update = MapStatusUpdateFactory.zoomTo(15.0f);
+        mBaiduMap.setMyLocationEnabled(true);
+        MapStatusUpdate update = MapStatusUpdateFactory.zoomTo(18.0f);
         mBaiduMap.animateMapStatus(update);
+
+
     }
 
     private class MyLocationListener implements BDLocationListener {
@@ -106,11 +119,18 @@ public class MainActivity extends AppCompatActivity
             MyLocationData data = new MyLocationData.Builder()
                     .accuracy(bdLocation.getRadius())
                     .latitude(bdLocation.getLatitude())
-                    .longitude(bdLocation.getLatitude())
+                    .longitude(bdLocation.getLongitude())
                     .build();
             mBaiduMap.setMyLocationData(data);
-//            MyLocationConfiguration config = new
-//                    MyLocationConfiguration(MyLocationConfiguration.LocationMode.COMPASS);
+
+            // 设置自定义图标
+            MyLocationConfiguration config = new
+                    MyLocationConfiguration(
+                    MyLocationConfiguration.LocationMode.NORMAL, true, mIconLocation);
+            mBaiduMap.setMyLocationConfigeration(config);
+
+
+            // 更新经纬度
             mLatitude = bdLocation.getLatitude();
             mLongitude = bdLocation.getLongitude();
 
@@ -138,6 +158,7 @@ public class MainActivity extends AppCompatActivity
                 MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(latLng);
                 mBaiduMap.animateMapStatus(update);
 
+
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
             }
@@ -151,7 +172,7 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        Log.d(TAG, "onCreate: end" );
+        Log.d(TAG, "onCreate: end");
     }
 
     @Override
@@ -172,10 +193,10 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-        // 开启定位
-        mBaiduMap.setMyLocationEnabled(true);
-        if(mBaiduMap.isMyLocationEnabled())
-        {mLocationClient.start();}
+
+        if (mBaiduMap.isMyLocationEnabled()) {
+            mLocationClient.start();
+        }
 
 
     }
@@ -235,7 +256,7 @@ public class MainActivity extends AppCompatActivity
                 mBaiduMap.setTrafficEnabled(false);
                 Log.d(TAG, "onOptionsItemSelected: 实时交通关闭");
                 item.setTitle(R.string.map_traffic_on);
-            }else{
+            } else {
                 mBaiduMap.setTrafficEnabled(true);
                 Log.d(TAG, "onOptionsItemSelected: 实时交通开启");
                 item.setTitle(R.string.map_traffic_off);
