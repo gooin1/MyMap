@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onOrientationChanged(float x) {
                 mCurrentX = x;
-                Log.d(TAG, "onSensorChanged: value is " + mCurrentX );
+                // Log.d(TAG, "onSensorChanged: value is " + mCurrentX );
             }
         });
 
@@ -150,10 +150,10 @@ public class MainActivity extends AppCompatActivity
             mLongitude = bdLocation.getLongitude();
 
 //            if (isFirstIn) {
-                LatLng latLng = new LatLng(bdLocation.getLatitude(), bdLocation.getLongitude());
+            LatLng latLng = new LatLng(bdLocation.getLatitude(), bdLocation.getLongitude());
 //                Log.d(TAG, "lat: " + bdLocation.getLatitude() + " lon: " +bdLocation.getLongitude());
-                MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(latLng);
-                mBaiduMap.animateMapStatus(update);
+            MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(latLng);
+            mBaiduMap.animateMapStatus(update);
 //                isFirstIn = false;
 //            }
 
@@ -170,9 +170,8 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
                 // 移动到我的位置
                 LatLng latLng = new LatLng(mLatitude, mLongitude);
-                MapStatusUpdate update = MapStatusUpdateFactory.newLatLngZoom(latLng,19.5f);
+                MapStatusUpdate update = MapStatusUpdateFactory.newLatLngZoom(latLng, 19.5f);
                 mBaiduMap.animateMapStatus(update);
-
 
 
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
@@ -189,6 +188,15 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         Log.d(TAG, "onCreate: end");
+
+        // 开启定位
+        if (mBaiduMap.isMyLocationEnabled()) {
+            mLocationClient.start();
+        }
+        // 开启方向传感器
+        mMyOrientationListener.start();
+        Log.d(TAG, "initToolBar: 定位传感器创建");
+
     }
 
     @Override
@@ -202,8 +210,15 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        //在activity执行onResume时执行mMapView. onResume ()，实现地图生命周期管理
         mMapView.onResume();
+        // 开启定位
+        mBaiduMap.setMyLocationEnabled(true);
+        mLocationClient.start();
+
+        // 开启方向传感器
+        mMyOrientationListener.start();
+        Log.d(TAG, "onStart: ");
+        Log.d(TAG, "onResume: ");
 
     }
 
@@ -216,7 +231,7 @@ public class MainActivity extends AppCompatActivity
         }
         // 开启方向传感器
         mMyOrientationListener.start();
-
+        Log.d(TAG, "onStart: ");
 
     }
 
@@ -229,6 +244,7 @@ public class MainActivity extends AppCompatActivity
 
         // 关闭方向传感器
         mMyOrientationListener.stop();
+        Log.d(TAG, "onStop: ");
     }
 
     @Override
@@ -236,6 +252,7 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
         //在activity执行onPause时执行mMapView. onPause ()，实现地图生命周期管理
         mMapView.onPause();
+        Log.d(TAG, "onPause: ");
     }
 
     @Override
