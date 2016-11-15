@@ -1,5 +1,6 @@
 package xyz.gooin.mymap;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -44,6 +45,10 @@ public class MainActivity extends AppCompatActivity
     private static final int accuracyCircleFillColor = 0xAAFFFF88;
     private static final int accuracyCircleStrokeColor = 0xAA00FF00;
 
+    private MyOrientationListener mMyOrientationListener;
+    private float mCurrentX;
+    private Context context;
+
     //定位相关参数
     private LocationClient mLocationClient = null;
     private MyLocationListener mLocationListenter;
@@ -65,6 +70,7 @@ public class MainActivity extends AppCompatActivity
         //注意该方法要再setContentView方法之前实现
         SDKInitializer.initialize(getApplicationContext());
         setContentView(R.layout.activity_main);
+        this.context = this;
 
         initMapView();
         initLocation();
@@ -96,8 +102,16 @@ public class MainActivity extends AppCompatActivity
         // 初始化图标
         mIconLocation = BitmapDescriptorFactory.fromResource(R.mipmap.ic_huaji);
 
-    }
+        mMyOrientationListener = new MyOrientationListener(context);
+        mMyOrientationListener.setOnOrientationListener(new MyOrientationListener.OnOrientationListener() {
+            @Override
+            public void onOrientationChanged(float x) {
+                mCurrentX = x;
+                Log.d(TAG, "onSensorChanged: value is " + mCurrentX );
+            }
+        });
 
+    }
 
     private void initMapView() {
 
@@ -117,6 +131,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onReceiveLocation(BDLocation bdLocation) {
             MyLocationData data = new MyLocationData.Builder()
+                    .direction(mCurrentX)
                     .accuracy(bdLocation.getRadius())
                     .latitude(bdLocation.getLatitude())
                     .longitude(bdLocation.getLongitude())
@@ -126,7 +141,7 @@ public class MainActivity extends AppCompatActivity
             // 设置自定义图标
             MyLocationConfiguration config = new
                     MyLocationConfiguration(
-                    MyLocationConfiguration.LocationMode.NORMAL, true, mIconLocation);
+                    MyLocationConfiguration.LocationMode.COMPASS, true, mIconLocation);
             mBaiduMap.setMyLocationConfigeration(config);
 
 
@@ -134,13 +149,13 @@ public class MainActivity extends AppCompatActivity
             mLatitude = bdLocation.getLatitude();
             mLongitude = bdLocation.getLongitude();
 
-            if (isFirstIn) {
+//            if (isFirstIn) {
                 LatLng latLng = new LatLng(bdLocation.getLatitude(), bdLocation.getLongitude());
 //                Log.d(TAG, "lat: " + bdLocation.getLatitude() + " lon: " +bdLocation.getLongitude());
                 MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(latLng);
                 mBaiduMap.animateMapStatus(update);
-                isFirstIn = false;
-            }
+//                isFirstIn = false;
+//            }
 
         }
     }
@@ -155,8 +170,9 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
                 // 移动到我的位置
                 LatLng latLng = new LatLng(mLatitude, mLongitude);
-                MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(latLng);
+                MapStatusUpdate update = MapStatusUpdateFactory.newLatLngZoom(latLng,19.5f);
                 mBaiduMap.animateMapStatus(update);
+
 
 
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
@@ -188,15 +204,18 @@ public class MainActivity extends AppCompatActivity
         super.onResume();
         //在activity执行onResume时执行mMapView. onResume ()，实现地图生命周期管理
         mMapView.onResume();
+
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-
+        // 开启定位
         if (mBaiduMap.isMyLocationEnabled()) {
             mLocationClient.start();
         }
+        // 开启方向传感器
+        mMyOrientationListener.start();
 
 
     }
@@ -207,6 +226,9 @@ public class MainActivity extends AppCompatActivity
         // 停止定位
         mBaiduMap.setMyLocationEnabled(false);
         mLocationClient.stop();
+
+        // 关闭方向传感器
+        mMyOrientationListener.stop();
     }
 
     @Override
